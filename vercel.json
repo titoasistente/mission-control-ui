@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "env": {
+    "VITE_CONVEX_URL": "https://groovy-bear-712.convex.cloud"
+  }
+}
