@@ -17,6 +17,7 @@ export default defineSchema({
     sessionKey: v.string(),
     currentTaskId: v.optional(v.string()),
   }),
+  
   tasks: defineTable({
     title: v.string(),
     description: v.string(),
@@ -28,5 +29,38 @@ export default defineSchema({
     position: v.optional(v.number()),
     lastUpdated: v.optional(v.number()),
     lastUpdate: v.optional(v.number()),
+    // Campos para aprobaciones
+    approvedAt: v.optional(v.number()),
+    approvedBy: v.optional(v.string()),
+    // Campos para definición de equipo (LGTM tracking)
+    definitionApprovals: v.optional(v.array(v.string())),
   }),
+
+  // Eventos de colaboración para audit log y mentions
+  collaborationEvents: defineTable({
+    taskId: v.string(),
+    type: v.union(
+      v.literal("ping"),
+      v.literal("thought_log"),
+      v.literal("design_decision"),
+      v.literal("status_change"),
+      v.literal("blocker"),
+      v.literal("permission_denied"),
+      v.literal("mention")
+    ),
+    // Campos legacy para compatibilidad con datos existentes
+    author: v.optional(v.string()),
+    content: v.optional(v.string()),
+    timestamp: v.optional(v.number()),
+    // Campos nuevos
+    agentId: v.optional(v.string()),
+    message: v.optional(v.string()),
+    targetAgentId: v.optional(v.string()),
+    responded: v.optional(v.boolean()),
+    respondedAt: v.optional(v.number()),
+    severity: v.optional(v.union(v.literal("low"), v.literal("medium"), v.literal("high"))),
+    metadata: v.optional(v.any()),
+    createdAt: v.optional(v.number()),
+  }).index("by_task", ["taskId"])
+    .index("by_target_agent", ["targetAgentId", "responded"]),
 });

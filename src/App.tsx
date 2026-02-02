@@ -316,18 +316,40 @@ function App() {
 
         <aside className="agents-section">
           <h2>🤖 AI Squad</h2>
-          {agents.map(agent => (
-            <div key={String(agent._id)} className="agent-card">
-              <div 
-                className="agent-status" 
-                style={{ background: statusColors[agent.status || ''] || '#666' }}
-              ></div>
-              <div className="agent-info">
-                <div className="agent-name">{agent.name || 'Unnamed Agent'}</div>
-                <div className="agent-role">{agent.role || 'Unknown Role'}</div>
+          {agents.map(agent => {
+            // Find current task for this agent (in_progress status)
+            const agentId = agent.name?.toLowerCase() || '';
+            const currentTask = filteredTasks.find(t => 
+              t.status === 'in_progress' && 
+              t.assigneeIds?.some(id => id.toLowerCase() === agentId)
+            );
+            
+            return (
+              <div key={String(agent._id)} className="agent-card">
+                <div 
+                  className="agent-status" 
+                  style={{ background: statusColors[agent.status || ''] || '#666' }}
+                ></div>
+                <div className="agent-info">
+                  <div className="agent-name">{agent.name || 'Unnamed Agent'}</div>
+                  <div className="agent-role">{agent.role || 'Unknown Role'}</div>
+                  {currentTask && (
+                    <div 
+                      className="agent-current-task"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTaskClick(currentTask as Task);
+                      }}
+                      title="Click to view task details"
+                    >
+                      <span className="task-indicator">⚡</span>
+                      <span className="task-title">{currentTask.title}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {agents.length === 0 && <p className="empty">Cargando agentes...</p>}
         </aside>
       </div>

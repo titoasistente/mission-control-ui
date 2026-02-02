@@ -382,6 +382,41 @@ header h1 {
   margin-top: 2px;
 }
 
+/* === AGENT CURRENT TASK === */
+.agent-current-task {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  max-width: 100%;
+}
+
+.agent-current-task:hover {
+  background: rgba(249, 115, 22, 0.2);
+  border-color: rgba(249, 115, 22, 0.4);
+  transform: translateX(2px);
+}
+
+.agent-current-task .task-indicator {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.agent-current-task .task-title {
+  font-size: 0.75rem;
+  color: var(--accent-orange-light);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .empty {
   color: var(--text-dim);
   font-style: italic;
