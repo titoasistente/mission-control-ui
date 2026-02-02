@@ -108,6 +108,15 @@ export const updateStatus = mutation({
     if (status === "done") {
       updateData.approvedAt = Date.now();
       updateData.approvedBy = requestorId;
+      // Reset notification tracking para permitir nueva alerta
+      updateData.notificationSentAt = undefined;
+      updateData.notificationType = undefined;
+    }
+
+    // Si cambia a blocked, resetear notificación para alertar
+    if (status === "blocked") {
+      updateData.notificationSentAt = undefined;
+      updateData.notificationType = undefined;
     }
 
     await ctx.db.patch(taskId, updateData);

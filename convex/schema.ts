@@ -34,7 +34,26 @@ export default defineSchema({
     approvedBy: v.optional(v.string()),
     // Campos para definición de equipo (LGTM tracking)
     definitionApprovals: v.optional(v.array(v.string())),
+    // Tracking para notificaciones
+    notificationSentAt: v.optional(v.number()),
+    notificationType: v.optional(v.string()),
   }),
+
+  // Sistema de notificaciones proactivas
+  notifications: defineTable({
+    taskId: v.string(),
+    type: v.union(v.literal("done"), v.literal("blocked")),
+    status: v.union(v.literal("pending"), v.literal("sent"), v.literal("failed")),
+    taskTitle: v.string(),
+    taskStatus: v.string(),
+    assigneeIds: v.array(v.string()),
+    detectedAt: v.number(),
+    sentAt: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+    retryCount: v.optional(v.number()),
+  }).index("by_status", ["status"])
+    .index("by_task", ["taskId"])
+    .index("by_detected_at", ["detectedAt"]),
 
   // Eventos de colaboración para audit log y mentions
   collaborationEvents: defineTable({
