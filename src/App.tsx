@@ -1,8 +1,27 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
+import Login from "./Login";
 import './App.css'
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+    if (localStorage.getItem('squad_access') === '1539') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = (pass: string) => {
+    if (pass === '1539') {
+      localStorage.setItem('squad_access', '1539');
+      setIsAuthenticated(true);
+    } else {
+      alert('Access Denied');
+    }
+  };
+
   const tasks = useQuery(api.tasks.get) ?? [];
   const agents = useQuery(api.agents.get) ?? [];
 
@@ -13,11 +32,16 @@ function App() {
     done: '#3b82f6'
   };
 
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <div className="dashboard">
       <header>
         <h1>⚡ Mission Control Squad</h1>
         <p className="subtitle">AI Agent Coordination Dashboard</p>
+        <button onClick={() => { localStorage.removeItem('squad_access'); window.location.reload(); }} style={{ background: 'transparent', border: '1px solid #444', color: '#666', fontSize: '0.7rem', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', marginTop: '10px' }}>Logout</button>
       </header>
 
       <div className="content">
