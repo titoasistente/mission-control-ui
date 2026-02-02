@@ -49,7 +49,7 @@ export const getUnifiedTaskFeed = query({
 
     // Merge y ordenar por fecha (más reciente primero)
     const unified = [...normalizedComments, ...normalizedEvents]
-      .sort((a, b) => b.createdAt - a.createdAt);
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
     return unified;
   },
@@ -116,7 +116,7 @@ export const pingAgent = mutation({
       .collect();
 
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-    const hasRecentUnresponded = recentPings.some(p => p.createdAt > fiveMinutesAgo);
+    const hasRecentUnresponded = recentPings.some(p => (p.createdAt || 0) > fiveMinutesAgo);
 
     if (hasRecentUnresponded) {
       throw new Error("Anti-loop: Target agent has unresponded ping to you in the last 5 minutes");

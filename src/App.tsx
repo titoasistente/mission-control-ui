@@ -195,7 +195,7 @@ function App() {
 
   const handleApproveTask = async (taskId: Id<"tasks">) => {
     try {
-      await updateTaskStatus({ taskId, status: 'done' });
+      await updateTaskStatus({ taskId, status: 'done', requestorId: userRole });
     } catch (err) {
       console.error('Failed to approve task:', err);
       alert('Failed to approve task. Check console.');

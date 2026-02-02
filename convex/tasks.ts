@@ -10,9 +10,10 @@ export const get = query({
 export const getByAssignee = query({
   args: { assigneeId: v.string() },
   handler: async (ctx, { assigneeId }) => {
-    return await ctx.db.query("tasks")
-      .filter((q) => q.eq(q.field("assigneeIds"), assigneeId))
-      .collect();
+    // Convex doesn't support direct array containment queries
+    // Filter all tasks and check assigneeIds array in memory
+    const allTasks = await ctx.db.query("tasks").collect();
+    return allTasks.filter(t => t.assigneeIds?.includes(assigneeId));
   },
 });
 
