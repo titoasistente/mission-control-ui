@@ -9,14 +9,14 @@ function App() {
   
   useEffect(() => {
     if (localStorage.getItem('squad_access') === '1539') {
-      setIsAuthenticated(true);
+      console.log('Access Granted'); setIsAuthenticated(true);
     }
   }, []);
 
   const handleLogin = (pass: string) => {
     if (pass === '1539') {
       localStorage.setItem('squad_access', '1539');
-      setIsAuthenticated(true);
+      console.log('Access Granted'); setIsAuthenticated(true);
     } else {
       alert('Access Denied');
     }
