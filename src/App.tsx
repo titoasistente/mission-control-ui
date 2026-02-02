@@ -4,7 +4,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 import Login from "./Login";
-import TaskCard from "./TaskCard";
+import TaskCard, { type Task } from "./TaskCard";
+import TaskDetailModal from "./TaskDetailModal";
 import './App.css'
 
 // Safe timestamp formatter
@@ -48,6 +49,8 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [draggedTask, setDraggedTask] = useState<Id<"tasks"> | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   useEffect(() => {
     if (localStorage.getItem('squad_access') === '1539') {
@@ -165,6 +168,16 @@ function App() {
     setDraggedTask(null);
   };
 
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTask(null);
+  };
+
   if (!isAuthenticated) {
     return <Login onLogin={handleLogin} />;
   }
@@ -220,6 +233,7 @@ function App() {
                   task={task}
                   getAgentName={getAgentName}
                   formatTimestamp={formatTimestamp}
+                  onClick={handleTaskClick}
                 />
               ))}
             </div>
@@ -231,6 +245,7 @@ function App() {
                   task={task}
                   getAgentName={getAgentName}
                   formatTimestamp={formatTimestamp}
+                  onClick={handleTaskClick}
                 />
               ))}
             </div>
@@ -249,6 +264,7 @@ function App() {
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
                   onDragEnd={handleDragEnd}
+                  onClick={handleTaskClick}
                 />
               ))}
             </div>
@@ -260,6 +276,7 @@ function App() {
                   task={task}
                   getAgentName={getAgentName}
                   formatTimestamp={formatTimestamp}
+                  onClick={handleTaskClick}
                 />
               ))}
             </div>
@@ -284,6 +301,14 @@ function App() {
           {agents.length === 0 && <p className="empty">Cargando agentes...</p>}
         </aside>
       </div>
+
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        getAgentName={getAgentName}
+        formatTimestamp={formatTimestamp}
+      />
     </div>
   )
 }

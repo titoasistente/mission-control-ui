@@ -4,8 +4,9 @@ import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 
-interface Task {
+export interface Task {
   _id: Id<"tasks">;
+  _creationTime?: number;
   title: string;
   description: string;
   status: string;
@@ -37,6 +38,7 @@ interface TaskCardProps {
   onDragOver?: (e: DragEvent) => void;
   onDrop?: (e: DragEvent, taskId: Id<"tasks">) => void;
   onDragEnd?: () => void;
+  onClick?: (task: Task) => void;
 }
 
 // Safe ISO string formatter
@@ -57,6 +59,7 @@ export default function TaskCard({
   onDragOver,
   onDrop,
   onDragEnd,
+  onClick,
 }: TaskCardProps) {
   const [showComments, setShowComments] = useState(false);
   
@@ -95,15 +98,22 @@ export default function TaskCard({
   const description = task.description ?? '';
   const assigneeIds = task.assigneeIds ?? [];
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick(task);
+    }
+  };
+
   return (
     <article 
-      className={`task-card ${statusClass} ${isDragging ? 'dragging' : ''}`}
+      className={`task-card ${statusClass} ${isDragging ? 'dragging' : ''} ${onClick ? 'clickable' : ''}`}
       draggable={draggable}
       onDragStart={draggable && onDragStart ? (e) => onDragStart(e, task._id) : undefined}
       onDragOver={draggable && onDragOver ? onDragOver : undefined}
       onDrop={draggable && onDrop ? (e) => onDrop(e, task._id) : undefined}
       onDragEnd={draggable && onDragEnd ? onDragEnd : undefined}
-      role={draggable ? "listitem" : undefined}
+      onClick={handleClick}
+      role={draggable ? "listitem" : "button"}
       aria-label={`Task: ${title}. Status: ${statusLabel}`}
       tabIndex={draggable ? 0 : undefined}
     >
