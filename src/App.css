@@ -1033,3 +1033,58 @@ header h1 {
 .thought-log-container::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
 }
+
+/* Agent name styling for better contrast */
+.thought-log-agent .agent-name {
+  margin-left: 0.5rem;
+  color: var(--accent-purple-light);
+}
+
+/* Staggered animation delay support */
+.thought-log-item {
+  animation-fill-mode: both;
+}
+
+/* Responsive: Collapse thoughts section on mobile */
+@media (max-width: 1100px) {
+  .content { 
+    grid-template-columns: 1fr; 
+  }
+  .task-columns { 
+    grid-template-columns: repeat(2, 1fr); 
+  }
+  .thoughts-section {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .thoughts-section {
+    max-height: 200px;
+    padding: 0.75rem;
+  }
+  
+  .thoughts-section h2 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .thought-log-container {
+    max-height: 150px;
+  }
+  
+  .thought-log-item {
+    padding: 0.625rem;
+  }
+  
+  .thought-log-message {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .task-columns { 
+    grid-template-columns: 1fr; 
+  }
+}

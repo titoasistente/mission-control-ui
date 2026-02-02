@@ -354,8 +354,8 @@ function App() {
           {agents.length === 0 && <p className="empty">Cargando agentes...</p>}
         </aside>
 
-        <aside className="thoughts-section">
-          <h2>🧠 Agent Thoughts</h2>
+        <aside className="thoughts-section" aria-label="Panel de pensamientos de agentes">
+          <h2>🧠 Pensamientos de Agentes</h2>
           <AgentThoughtLog 
             formatTimestamp={formatTimestamp}
             getAgentName={getAgentName}

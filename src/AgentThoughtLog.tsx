@@ -38,23 +38,29 @@ export default function AgentThoughtLog({
 
   if (thoughtLogs.length === 0) {
     return (
-      <div className="thought-log-empty">
-        <p>🤔 No thought logs yet...</p>
-        <p className="hint">Agents will log their reasoning here as they work.</p>
+      <div className="thought-log-empty" role="status" aria-live="polite">
+        <p>🤔 Los agentes aún no han compartido pensamientos</p>
+        <p className="hint">Aquí aparecerá el razonamiento de los agentes mientras trabajan.</p>
       </div>
     );
   }
 
   return (
-    <div className="thought-log-container">
-      <ul className="thought-log-list">
-        {thoughtLogs.map((log) => (
-          <li key={log._id} className="thought-log-item">
+    <div className="thought-log-container" role="log" aria-label="Pensamientos de agentes">
+      <ul className="thought-log-list" role="list">
+        {thoughtLogs.map((log, index) => (
+          <li 
+            key={log._id} 
+            className="thought-log-item"
+            style={{ animationDelay: `${index * 50}ms` }}
+            role="listitem"
+          >
             <div className="thought-log-header">
               <span className="thought-log-agent">
-                🧠 {getAgentName(log.agentId)}
+                <span aria-label="Pensamiento de agente" role="img">🧠</span>
+                <span className="agent-name">{getAgentName(log.agentId)}</span>
               </span>
-              <time className="thought-log-time">
+              <time className="thought-log-time" dateTime={new Date(log.createdAt).toISOString()}>
                 {formatTimestamp(log.createdAt)}
               </time>
             </div>

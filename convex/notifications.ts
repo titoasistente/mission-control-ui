@@ -3,7 +3,6 @@ import { v } from "convex/values";
 import { api } from "./_generated/api";
 
 const NOTIFICATION_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutos
-const WHATSAPP_TARGET = "loki"; // Notificar a Loki como DevOps lead
 
 // Query: Obtener notificaciones pendientes
 export const getPending = query({
