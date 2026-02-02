@@ -7,6 +7,7 @@ import Login from "./Login";
 import TaskCard, { type Task } from "./TaskCard";
 import TaskDetailModal from "./TaskDetailModal";
 import AgentThoughtLog from "./AgentThoughtLog";
+import { MentionsBadge } from "./MentionsBadge";
 import './App.css'
 
 // Safe timestamp formatter
@@ -237,6 +238,15 @@ function App() {
               ))}
             </select>
           )}
+          <MentionsBadge 
+            agentName={userRole}
+            getAgentName={getAgentName}
+            formatTimestamp={formatTimestamp}
+            onTaskClick={(taskId) => {
+              const task = tasks.find(t => t._id === taskId);
+              if (task) handleTaskClick(task as Task);
+            }}
+          />
           <button 
             onClick={() => { 
               localStorage.removeItem('squad_access'); 

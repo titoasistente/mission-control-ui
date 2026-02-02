@@ -322,6 +322,20 @@ export const getPendingMentions = query({
   },
 });
 
+// Query eficiente: solo contar mentions pendientes
+export const getPendingMentionsCount = query({
+  args: { agentName: v.string() },
+  handler: async (ctx, { agentName }) => {
+    const mentions = await ctx.db.query("collaborationEvents")
+      .withIndex("by_target_agent", (q) => 
+        q.eq("targetAgentId", agentName.toLowerCase()).eq("responded", false)
+      )
+      .collect();
+
+    return mentions.filter(m => m.type === "mention" || m.type === "ping").length;
+  },
+});
+
 // Query para obtener todos los thought logs (feed global)
 export const getAllThoughtLogs = query({
   handler: async (ctx) => {
