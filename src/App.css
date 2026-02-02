@@ -41,7 +41,7 @@ header h1 {
 
 .task-columns {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 15px;
 }
 
@@ -60,6 +60,7 @@ header h1 {
 }
 
 .task-card.working { border-left-color: #f97316; }
+.task-card.review { border-left-color: #a855f7; }
 .task-card.done { border-left-color: #4ade80; }
 
 .task-card h4 {

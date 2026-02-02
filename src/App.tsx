@@ -67,6 +67,15 @@ function App() {
               ))}
             </div>
             <div className="task-column">
+              <h3>👀 Pending Review</h3>
+              {tasks.filter(t => t.status === 'pending_review').map(task => (
+                <div key={task._id} className="task-card review">
+                  <h4>{task.title}</h4>
+                  <p>{task.description}</p>
+                </div>
+              ))}
+            </div>
+            <div className="task-column">
               <h3>✅ Done</h3>
               {tasks.filter(t => t.status === 'done').map(task => (
                 <div key={task._id} className="task-card done">
