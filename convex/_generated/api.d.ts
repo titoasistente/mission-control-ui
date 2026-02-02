@@ -9,6 +9,7 @@
  */
 
 import type * as agents from "../agents.js";
+import type * as setup from "../setup.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -19,6 +20,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   agents: typeof agents;
+  setup: typeof setup;
   tasks: typeof tasks;
 }>;
 
