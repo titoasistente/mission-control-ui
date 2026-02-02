@@ -790,6 +790,38 @@ header h1 {
   border-color: var(--accent-purple);
 }
 
+/* === APPROVE BUTTON === */
+.approve-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--accent-green), #22c55e);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(74, 222, 128, 0.3);
+}
+
+.approve-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(74, 222, 128, 0.5);
+}
+
+.approve-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.approve-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--text-dim);
+  box-shadow: none;
+}
+
 /* Mobile adjustments for modal */
 @media (max-width: 640px) {
   .modal-content {

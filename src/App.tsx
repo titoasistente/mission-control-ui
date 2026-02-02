@@ -71,6 +71,7 @@ function App() {
   const rawTasks = useQuery(api.tasks.get) ?? [];
   const rawAgents = useQuery(api.agents.get) ?? [];
   const reorderTask = useMutation(api.tasks.reorder);
+  const updateTaskStatus = useMutation(api.tasks.updateStatus);
 
   // Defensive data normalization
   const tasks: SafeTask[] = useMemo(() => {
@@ -178,6 +179,15 @@ function App() {
     setSelectedTask(null);
   };
 
+  const handleApproveTask = async (taskId: Id<"tasks">) => {
+    try {
+      await updateTaskStatus({ taskId, status: 'done' });
+    } catch (err) {
+      console.error('Failed to approve task:', err);
+      alert('Failed to approve task. Check console.');
+    }
+  };
+
   if (!isAuthenticated) {
     return <Login onLogin={handleLogin} />;
   }
@@ -265,6 +275,8 @@ function App() {
                   onDrop={handleDrop}
                   onDragEnd={handleDragEnd}
                   onClick={handleTaskClick}
+                  onApprove={handleApproveTask}
+                  canApprove={true}
                 />
               ))}
             </div>

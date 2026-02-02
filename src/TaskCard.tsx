@@ -39,6 +39,8 @@ interface TaskCardProps {
   onDrop?: (e: DragEvent, taskId: Id<"tasks">) => void;
   onDragEnd?: () => void;
   onClick?: (task: Task) => void;
+  onApprove?: (taskId: Id<"tasks">) => void;
+  canApprove?: boolean;
 }
 
 // Safe ISO string formatter
@@ -60,6 +62,8 @@ export default function TaskCard({
   onDrop,
   onDragEnd,
   onClick,
+  onApprove,
+  canApprove = false,
 }: TaskCardProps) {
   const [showComments, setShowComments] = useState(false);
   
@@ -183,6 +187,21 @@ export default function TaskCard({
             </div>
           )}
         </section>
+      )}
+      
+      {/* Approve Button - Only for Review column */}
+      {task.status === 'review' && onApprove && (
+        <button
+          className="approve-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            onApprove(task._id);
+          }}
+          disabled={!canApprove}
+          aria-label="Approve and move to Done"
+        >
+          ✅ Approve
+        </button>
       )}
     </article>
   );
