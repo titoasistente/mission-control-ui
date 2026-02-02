@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { DragEvent } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
@@ -7,8 +7,9 @@ import Login from "./Login";
 import TaskCard from "./TaskCard";
 import './App.css'
 
-function formatTimestamp(ts?: number): string {
-  if (!ts) return '';
+// Safe timestamp formatter
+function formatTimestamp(ts?: number | null): string {
+  if (ts == null || isNaN(ts) || ts <= 0) return '';
   const now = new Date();
   const diff = now.getTime() - ts;
   
@@ -16,6 +17,31 @@ function formatTimestamp(ts?: number): string {
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
   return new Date(ts).toLocaleDateString();
+}
+
+// Type definitions for safe data handling
+interface SafeTask {
+  _id: Id<"tasks">;
+  _creationTime: number;
+  title: string;
+  description: string;
+  status: string;
+  assigneeIds?: string[];
+  project?: string;
+  projectId?: string;
+  order?: number;
+  position?: number;
+  lastUpdated?: number;
+  lastUpdate?: number;
+}
+
+interface SafeAgent {
+  _id: Id<"agents">;
+  _creationTime: number;
+  name?: string;
+  role?: string;
+  status?: string;
+  sessionKey?: string;
 }
 
 function App() {
@@ -38,20 +64,58 @@ function App() {
     }
   };
 
-  const tasks = useQuery(api.tasks.get) ?? [];
-  const agents = useQuery(api.agents.get) ?? [];
+  // Safe query results with proper defaults
+  const rawTasks = useQuery(api.tasks.get) ?? [];
+  const rawAgents = useQuery(api.agents.get) ?? [];
   const reorderTask = useMutation(api.tasks.reorder);
 
+  // Defensive data normalization
+  const tasks: SafeTask[] = useMemo(() => {
+    if (!Array.isArray(rawTasks)) return [];
+    return rawTasks
+      .filter(t => {
+        // Validate minimal required fields
+        if (!t || typeof t !== 'object') return false;
+        if (!('_id' in t)) return false;
+        if (!('title' in t)) return false;
+        return true;
+      })
+      .map(t => ({
+        ...t,
+        // Ensure optional arrays are actually arrays
+        assigneeIds: Array.isArray(t.assigneeIds) ? t.assigneeIds : [],
+        // Ensure strings are strings
+        title: String(t.title ?? ''),
+        description: String(t.description ?? ''),
+        status: String(t.status ?? 'pending'),
+      }));
+  }, [rawTasks]);
+
+  const agents: SafeAgent[] = useMemo(() => {
+    if (!Array.isArray(rawAgents)) return [];
+    return rawAgents.filter(a => {
+      if (!a || typeof a !== 'object') return false;
+      if (!('_id' in a)) return false;
+      return true;
+    });
+  }, [rawAgents]);
+
   // Get unique projects for filter
-  const projects = [...new Set(tasks.map(t => t.projectId || t.project).filter(Boolean))] as string[];
+  const projects = useMemo(() => {
+    return [...new Set(tasks.map(t => t.projectId || t.project).filter(Boolean))] as string[];
+  }, [tasks]);
   
   // Filter tasks by project
-  const filteredTasks = projectFilter === 'all' 
-    ? tasks 
-    : tasks.filter(t => (t.projectId || t.project) === projectFilter);
+  const filteredTasks = useMemo(() => {
+    if (projectFilter === 'all') return tasks;
+    return tasks.filter(t => (t.projectId || t.project) === projectFilter);
+  }, [tasks, projectFilter]);
 
   // Get last update across all tasks
-  const lastGlobalUpdate = Math.max(...tasks.map(t => t.lastUpdate || t.lastUpdated || 0), 0);
+  const lastGlobalUpdate = useMemo(() => {
+    if (tasks.length === 0) return 0;
+    return Math.max(...tasks.map(t => t.lastUpdate || t.lastUpdated || 0), 0);
+  }, [tasks]);
 
   const statusColors: Record<string, string> = {
     idle: '#4ade80',
@@ -60,10 +124,11 @@ function App() {
     done: '#3b82f6'
   };
 
-  // Get agent name by ID
-  const getAgentName = (id: string) => {
+  // Get agent name by ID with fallback
+  const getAgentName = (id: string): string => {
+    if (!id) return 'Unknown';
     const agent = agents.find(a => a._id === id);
-    return agent?.name || id;
+    return agent?.name?.trim() || id;
   };
 
   // Drag & Drop handlers
@@ -83,12 +148,16 @@ function App() {
     
     const reviewTasks = filteredTasks
       .filter(t => t.status === 'review')
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
+      .sort((a, b) => (a.order || a.position || 0) - (b.order || b.position || 0));
     
     const targetIndex = reviewTasks.findIndex(t => t._id === targetTaskId);
     const newOrder = targetIndex * 10;
     
-    await reorderTask({ taskId: draggedTask, newOrder });
+    try {
+      await reorderTask({ taskId: draggedTask, newOrder });
+    } catch (err) {
+      console.error('Failed to reorder task:', err);
+    }
     setDraggedTask(null);
   };
 
@@ -99,6 +168,14 @@ function App() {
   if (!isAuthenticated) {
     return <Login onLogin={handleLogin} />;
   }
+
+  // Safe filtering for task columns
+  const pendingTasks = filteredTasks.filter(t => t.status === 'pending');
+  const inProgressTasks = filteredTasks.filter(t => t.status === 'in_progress');
+  const reviewTasks = filteredTasks
+    .filter(t => t.status === 'review')
+    .sort((a, b) => (a.order || a.position || 0) - (b.order || b.position || 0));
+  const doneTasks = filteredTasks.filter(t => t.status === 'done');
 
   return (
     <div className="dashboard">
@@ -122,7 +199,12 @@ function App() {
               ))}
             </select>
           )}
-          <button onClick={() => { localStorage.removeItem('squad_access'); window.location.reload(); }} className="logout-btn">Logout</button>
+          <button 
+            onClick={() => { localStorage.removeItem('squad_access'); window.location.reload(); }} 
+            className="logout-btn"
+          >
+            Logout
+          </button>
         </div>
       </header>
 
@@ -132,9 +214,9 @@ function App() {
           <div className="task-columns">
             <div className="task-column">
               <h3>📋 Pending</h3>
-              {filteredTasks.filter(t => t.status === 'pending').map(task => (
+              {pendingTasks.map(task => (
                 <TaskCard
-                  key={task._id}
+                  key={String(task._id)}
                   task={task}
                   getAgentName={getAgentName}
                   formatTimestamp={formatTimestamp}
@@ -143,9 +225,9 @@ function App() {
             </div>
             <div className="task-column">
               <h3>⚡ In Progress</h3>
-              {filteredTasks.filter(t => t.status === 'in_progress').map(task => (
+              {inProgressTasks.map(task => (
                 <TaskCard
-                  key={task._id}
+                  key={String(task._id)}
                   task={task}
                   getAgentName={getAgentName}
                   formatTimestamp={formatTimestamp}
@@ -155,30 +237,26 @@ function App() {
             <div className="task-column review-column">
               <h3>👀 Pending Review</h3>
               <p className="column-hint">Drag to reorder</p>
-              {filteredTasks
-                .filter(t => t.status === 'review')
-                .sort((a, b) => (a.order || a.position || 0) - (b.order || b.position || 0))
-                .map(task => (
-                  <TaskCard
-                    key={task._id}
-                    task={task}
-                    draggable={true}
-                    isDragging={draggedTask === task._id}
-                    getAgentName={getAgentName}
-                    formatTimestamp={formatTimestamp}
-                    onDragStart={handleDragStart}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    onDragEnd={handleDragEnd}
-                  />
-                ))
-              }
+              {reviewTasks.map(task => (
+                <TaskCard
+                  key={String(task._id)}
+                  task={task}
+                  draggable={true}
+                  isDragging={draggedTask === task._id}
+                  getAgentName={getAgentName}
+                  formatTimestamp={formatTimestamp}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                />
+              ))}
             </div>
             <div className="task-column">
               <h3>✅ Done</h3>
-              {filteredTasks.filter(t => t.status === 'done').map(task => (
+              {doneTasks.map(task => (
                 <TaskCard
-                  key={task._id}
+                  key={String(task._id)}
                   task={task}
                   getAgentName={getAgentName}
                   formatTimestamp={formatTimestamp}
@@ -192,11 +270,14 @@ function App() {
         <aside className="agents-section">
           <h2>🤖 AI Squad</h2>
           {agents.map(agent => (
-            <div key={agent._id} className="agent-card">
-              <div className="agent-status" style={{ background: statusColors[agent.status] || '#666' }}></div>
+            <div key={String(agent._id)} className="agent-card">
+              <div 
+                className="agent-status" 
+                style={{ background: statusColors[agent.status || ''] || '#666' }}
+              ></div>
               <div className="agent-info">
-                <div className="agent-name">{agent.name}</div>
-                <div className="agent-role">{agent.role}</div>
+                <div className="agent-name">{agent.name || 'Unnamed Agent'}</div>
+                <div className="agent-role">{agent.role || 'Unknown Role'}</div>
               </div>
             </div>
           ))}

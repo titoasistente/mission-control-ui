@@ -9,13 +9,22 @@ interface Task {
   title: string;
   description: string;
   status: string;
-  assigneeIds: string[];
+  assigneeIds?: string[];
   project?: string;
   projectId?: string;
   order?: number;
   position?: number;
   lastUpdated?: number;
   lastUpdate?: number;
+}
+
+interface Comment {
+  _id: Id<"comments">;
+  taskId: string;
+  author: string;
+  text: string;
+  createdAt?: number;
+  timestamp?: number;
 }
 
 interface TaskCardProps {
@@ -28,6 +37,14 @@ interface TaskCardProps {
   onDragOver?: (e: DragEvent) => void;
   onDrop?: (e: DragEvent, taskId: Id<"tasks">) => void;
   onDragEnd?: () => void;
+}
+
+// Safe ISO string formatter
+function safeISOString(ts: unknown): string {
+  if (ts == null) return new Date().toISOString();
+  const num = Number(ts);
+  if (isNaN(num) || num <= 0) return new Date().toISOString();
+  return new Date(num).toISOString();
 }
 
 export default function TaskCard({
@@ -43,68 +60,120 @@ export default function TaskCard({
 }: TaskCardProps) {
   const [showComments, setShowComments] = useState(false);
   
-  const allComments = useQuery(api.comments.getAll) ?? [];
-  const taskComments = allComments.filter(c => c.taskId === task._id);
+  // Handle case where task might be null/undefined or missing critical fields
+  if (!task || !task._id) {
+    return (
+      <article className="task-card error">
+        <h4>⚠️ Invalid Task</h4>
+        <p>Task data is corrupted or missing</p>
+      </article>
+    );
+  }
+
+  // Safe query with error boundary protection
+  let allComments: Comment[] = [];
+  try {
+    const queryResult = useQuery(api.comments.getAll);
+    allComments = (queryResult ?? []) as Comment[];
+  } catch (e) {
+    console.error("Error loading comments:", e);
+    allComments = [];
+  }
+  
+  const taskComments = allComments.filter(c => c.taskId === String(task._id));
   
   const statusClass = task.status === 'in_progress' ? 'working' 
     : task.status === 'review' ? 'review'
     : task.status === 'done' ? 'done' : '';
 
+  const statusLabel = task.status === 'in_progress' ? 'In Progress' 
+    : task.status === 'review' ? 'Pending Review'
+    : task.status === 'done' ? 'Done' : 'Pending';
+
+  // Safe accessor for title/description
+  const title = task.title ?? 'Untitled Task';
+  const description = task.description ?? '';
+  const assigneeIds = task.assigneeIds ?? [];
+
   return (
-    <div 
+    <article 
       className={`task-card ${statusClass} ${isDragging ? 'dragging' : ''}`}
       draggable={draggable}
       onDragStart={draggable && onDragStart ? (e) => onDragStart(e, task._id) : undefined}
       onDragOver={draggable && onDragOver ? onDragOver : undefined}
       onDrop={draggable && onDrop ? (e) => onDrop(e, task._id) : undefined}
       onDragEnd={draggable && onDragEnd ? onDragEnd : undefined}
+      role={draggable ? "listitem" : undefined}
+      aria-label={`Task: ${title}. Status: ${statusLabel}`}
+      tabIndex={draggable ? 0 : undefined}
     >
-      <h4>{task.title}</h4>
-      <p>{task.description}</p>
+      <h4>{title}</h4>
+      {description && <p>{description}</p>}
       
       {(task.projectId || task.project) && (
         <div className="task-project">📁 {task.projectId || task.project}</div>
       )}
       
-      {task.assigneeIds && task.assigneeIds.length > 0 && (
+      {assigneeIds.length > 0 && (
         <div className="task-assignees">
-          👤 {task.assigneeIds.map(id => getAgentName(id)).join(', ')}
+          👤 {assigneeIds.map(id => getAgentName(id)).join(', ')}
         </div>
       )}
       
       {(task.lastUpdate || task.lastUpdated) && (
-        <div className="task-timestamp">🕐 {formatTimestamp(task.lastUpdate || task.lastUpdated)}</div>
+        <div className="task-timestamp">
+          🕐 {formatTimestamp(task.lastUpdate || task.lastUpdated)}
+        </div>
       )}
       
       {taskComments.length > 0 && (
-        <div className="task-comments-section">
+        <section className="task-comments-section" aria-label="Task comments">
           <button 
             className="comments-toggle"
             onClick={() => setShowComments(!showComments)}
+            aria-expanded={showComments}
+            aria-controls={`comments-${task._id}`}
           >
             💬 {taskComments.length} comment{taskComments.length !== 1 ? 's' : ''} {showComments ? '▾' : '▸'}
           </button>
           
           {showComments && (
-            <div className="comments-thread">
+            <div 
+              id={`comments-${task._id}`}
+              className="comments-thread"
+              role="log"
+              aria-live="polite"
+            >
               {taskComments
-                .sort((a, b) => (a.createdAt || a.timestamp || 0) - (b.createdAt || b.timestamp || 0))
-                .map(comment => (
-                  <div key={comment._id} className="comment">
-                    <div className="comment-header">
-                      <span className="comment-author">{comment.author}</span>
-                      <span className="comment-time">
-                        {formatTimestamp(comment.createdAt || comment.timestamp)}
-                      </span>
+                .sort((a, b) => {
+                  const aTime = Number(a?.createdAt ?? a?.timestamp ?? 0);
+                  const bTime = Number(b?.createdAt ?? b?.timestamp ?? 0);
+                  return aTime - bTime;
+                })
+                .map(comment => {
+                  if (!comment || !comment._id) return null;
+                  const commentText = comment.text ?? 'No content';
+                  const commentAuthor = comment.author ?? 'Unknown';
+                  return (
+                    <div key={comment._id} className="comment">
+                      <div className="comment-header">
+                        <span className="comment-author">{commentAuthor}</span>
+                        <time 
+                          className="comment-time" 
+                          dateTime={safeISOString(comment.createdAt ?? comment.timestamp)}
+                        >
+                          {formatTimestamp(comment.createdAt ?? comment.timestamp)}
+                        </time>
+                      </div>
+                      <p className="comment-text">{commentText}</p>
                     </div>
-                    <div className="comment-text">{comment.text}</div>
-                  </div>
-                ))
+                  );
+                })
               }
             </div>
           )}
-        </div>
+        </section>
       )}
-    </div>
+    </article>
   );
 }
