@@ -26,11 +26,53 @@ header h1 {
   margin-top: 5px;
 }
 
+.last-update {
+  color: #666;
+  font-size: 0.75rem;
+  margin-top: 8px;
+}
+
+.header-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.project-filter {
+  background: #262626;
+  border: 1px solid #444;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.project-filter:hover {
+  border-color: #666;
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid #444;
+  color: #666;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  border-color: #666;
+  color: #888;
+}
+
 .content {
   display: grid;
   grid-template-columns: 3fr 1fr;
   gap: 30px;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
@@ -51,17 +93,39 @@ header h1 {
   margin-bottom: 10px;
 }
 
+.column-hint {
+  font-size: 0.65rem;
+  color: #555;
+  margin: -8px 0 8px 0;
+  font-style: italic;
+}
+
 .task-card {
   background: #262626;
   padding: 15px;
   border-radius: 10px;
   border-left: 4px solid #888;
   margin-bottom: 10px;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
 }
 
 .task-card.working { border-left-color: #f97316; }
 .task-card.review { border-left-color: #a855f7; }
 .task-card.done { border-left-color: #4ade80; }
+
+.task-card[draggable="true"] {
+  cursor: grab;
+}
+
+.task-card[draggable="true"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+}
+
+.task-card.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
 
 .task-card h4 {
   margin: 0 0 8px 0;
@@ -72,6 +136,35 @@ header h1 {
   margin: 0;
   color: #aaa;
   font-size: 0.8rem;
+}
+
+.task-project {
+  margin-top: 10px;
+  font-size: 0.7rem;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.task-assignees {
+  margin-top: 8px;
+  font-size: 0.7rem;
+  color: #a855f7;
+}
+
+.task-timestamp {
+  margin-top: 6px;
+  font-size: 0.65rem;
+  color: #555;
+}
+
+.review-column {
+  background: rgba(168, 85, 247, 0.05);
+  padding: 10px;
+  border-radius: 10px;
+  margin: -10px;
 }
 
 .agent-card {
@@ -108,7 +201,11 @@ header h1 {
   padding: 20px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .content { grid-template-columns: 1fr; }
+  .task-columns { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 700px) {
   .task-columns { grid-template-columns: 1fr; }
 }
