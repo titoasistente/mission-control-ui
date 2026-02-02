@@ -1,6 +1,22 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
+// NOTE: Shuri's WhatsApp hook disabled - ctx.runAction not available in mutations
+// Alternative: Use http action or client-side trigger
+
+// Helper: Verificar si estamos en horario mute (23:00-08:00)
+function isMuteHours(): boolean {
+  const hour = new Date().getHours();
+  return hour >= 23 || hour < 8;
+}
+
+// Helper: Verificar si ha pasado suficiente tiempo desde la última notificación (30 min)
+function shouldThrottle(lastNotificationAt: number | undefined): boolean {
+  if (!lastNotificationAt) return false;
+  const THROTTLE_MS = 30 * 60 * 1000; // 30 minutos
+  return Date.now() - lastNotificationAt < THROTTLE_MS;
+}
+
 export const get = query({
   handler: async (ctx) => {
     return await ctx.db.query("tasks").order("desc").collect();
@@ -119,7 +135,30 @@ export const updateStatus = mutation({
       updateData.notificationType = undefined;
     }
 
+    // Obtener task actual para el hook de notificaciones
+    const task = await ctx.db.get(taskId);
+    
     await ctx.db.patch(taskId, updateData);
+
+    // 🔔 Hook: WhatsApp Notification para done/blocked (DISABLED - requires http action)
+    // TODO: Shuri - implementar como http action o client-side trigger
+    // ctx.runAction no disponible en mutations
+    if ((status === "done" || status === "blocked") && task) {
+      // Log que se detectó el cambio (la notificación real se hará vía otra vía)
+      await ctx.db.insert("collaborationEvents", {
+        taskId: taskId.toString(),
+        type: "thought_log",
+        agentId: "shuri",
+        message: `📱 WhatsApp notification trigger: task ${status} (mute: ${isMuteHours()}, lastNotif: ${task.notificationSentAt || 'none'})`,
+        metadata: { 
+          status, 
+          muteHours: isMuteHours(),
+          shouldNotify: !isMuteHours() && !shouldThrottle(task.notificationSentAt),
+          throttled: shouldThrottle(task.notificationSentAt),
+        },
+        createdAt: Date.now(),
+      });
+    }
 
     // Log del cambio de status
     await ctx.db.insert("collaborationEvents", {
