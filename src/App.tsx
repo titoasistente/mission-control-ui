@@ -45,8 +45,12 @@ interface SafeAgent {
   sessionKey?: string;
 }
 
+// Allowlist de usuarios que pueden aprobar tareas
+const CAN_APPROVE_ROLES = ['luke', 'chief_of_staff'];
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<string>('');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [draggedTask, setDraggedTask] = useState<Id<"tasks"> | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -54,18 +58,28 @@ function App() {
   
   useEffect(() => {
     if (localStorage.getItem('squad_access') === '1539') {
-      console.log('Access Granted'); setIsAuthenticated(true);
+      const savedRole = localStorage.getItem('squad_role') || 'viewer';
+      console.log('Access Granted'); 
+      setIsAuthenticated(true);
+      setUserRole(savedRole);
     }
   }, []);
 
-  const handleLogin = (pass: string) => {
+  const handleLogin = (pass: string, role?: string) => {
     if (pass === '1539') {
+      const userRole = role || 'viewer';
       localStorage.setItem('squad_access', '1539');
-      console.log('Access Granted'); setIsAuthenticated(true);
+      localStorage.setItem('squad_role', userRole);
+      console.log('Access Granted as:', userRole); 
+      setIsAuthenticated(true);
+      setUserRole(userRole);
     } else {
       alert('Access Denied');
     }
   };
+  
+  // Determinar si el usuario puede aprovar tareas
+  const canApprove = CAN_APPROVE_ROLES.includes(userRole);
 
   // Safe query results with proper defaults
   const rawTasks = useQuery(api.tasks.get) ?? [];
@@ -223,7 +237,11 @@ function App() {
             </select>
           )}
           <button 
-            onClick={() => { localStorage.removeItem('squad_access'); window.location.reload(); }} 
+            onClick={() => { 
+              localStorage.removeItem('squad_access'); 
+              localStorage.removeItem('squad_role');
+              window.location.reload(); 
+            }} 
             className="logout-btn"
           >
             Logout
@@ -276,7 +294,7 @@ function App() {
                   formatTimestamp={formatTimestamp}
                   onClick={handleTaskClick}
                   onApprove={handleApproveTask}
-                  canApprove={true}
+                  canApprove={canApprove}
                 />
               ))}
             </div>
