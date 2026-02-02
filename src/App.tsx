@@ -6,6 +6,7 @@ import type { Id } from "../convex/_generated/dataModel";
 import Login from "./Login";
 import TaskCard, { type Task } from "./TaskCard";
 import TaskDetailModal from "./TaskDetailModal";
+import AgentThoughtLog from "./AgentThoughtLog";
 import './App.css'
 
 // Safe timestamp formatter
@@ -351,6 +352,15 @@ function App() {
             );
           })}
           {agents.length === 0 && <p className="empty">Cargando agentes...</p>}
+        </aside>
+
+        <aside className="thoughts-section">
+          <h2>🧠 Agent Thoughts</h2>
+          <AgentThoughtLog 
+            formatTimestamp={formatTimestamp}
+            getAgentName={getAgentName}
+            limit={5}
+          />
         </aside>
       </div>
 

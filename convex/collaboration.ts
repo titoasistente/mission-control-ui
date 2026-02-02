@@ -322,6 +322,18 @@ export const getPendingMentions = query({
   },
 });
 
+// Query para obtener todos los thought logs (feed global)
+export const getAllThoughtLogs = query({
+  handler: async (ctx) => {
+    const events = await ctx.db.query("collaborationEvents")
+      .filter((q) => q.eq(q.field("type"), "thought_log"))
+      .order("desc")
+      .take(50);
+    
+    return events;
+  },
+});
+
 // Marcar mention como respondida
 export const resolveMention = mutation({
   args: {
