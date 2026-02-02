@@ -2,6 +2,14 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  comments: defineTable({
+    taskId: v.string(),
+    author: v.string(),
+    text: v.string(),
+    createdAt: v.optional(v.number()),
+    timestamp: v.optional(v.number()),
+  }).index("by_task", ["taskId"]),
+
   agents: defineTable({
     name: v.string(),
     role: v.string(),

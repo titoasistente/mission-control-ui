@@ -201,6 +201,65 @@ header h1 {
   padding: 20px;
 }
 
+/* Comments */
+.task-comments-section {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #333;
+}
+
+.comments-toggle {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.comments-toggle:hover {
+  color: #fff;
+}
+
+.comments-thread {
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.comment {
+  background: #1a1a1a;
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.comment-author {
+  color: #a855f7;
+  font-weight: 600;
+}
+
+.comment-time {
+  color: #555;
+  font-size: 0.65rem;
+}
+
+.comment-text {
+  color: #ccc;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
 @media (max-width: 1100px) {
   .content { grid-template-columns: 1fr; }
   .task-columns { grid-template-columns: repeat(2, 1fr); }

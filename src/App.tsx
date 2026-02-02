@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import Login from "./Login";
+import TaskCard from "./TaskCard";
 import './App.css'
 
 interface Task {
@@ -19,23 +20,15 @@ interface Task {
   lastUpdate?: number;
 }
 
-interface Agent {
-  _id: Id<"agents">;
-  name: string;
-  role: string;
-  status: string;
-}
-
 function formatTimestamp(ts?: number): string {
   if (!ts) return '';
-  const date = new Date(ts);
   const now = new Date();
   const diff = now.getTime() - ts;
   
   if (diff < 60000) return 'just now';
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-  return date.toLocaleDateString();
+  return new Date(ts).toLocaleDateString();
 }
 
 function App() {
@@ -62,7 +55,7 @@ function App() {
   const agents = useQuery(api.agents.get) ?? [];
   const reorderTask = useMutation(api.tasks.reorder);
 
-  // Get unique projects for filter (support both project and projectId)
+  // Get unique projects for filter
   const projects = [...new Set(tasks.map(t => t.projectId || t.project).filter(Boolean))] as string[];
   
   // Filter tasks by project
@@ -70,7 +63,7 @@ function App() {
     ? tasks 
     : tasks.filter(t => (t.projectId || t.project) === projectFilter);
 
-  // Get last update across all tasks (support both lastUpdate and lastUpdated)
+  // Get last update across all tasks
   const lastGlobalUpdate = Math.max(...tasks.map(t => t.lastUpdate || t.lastUpdated || 0), 0);
 
   const statusColors: Record<string, string> = {
@@ -86,7 +79,7 @@ function App() {
     return agent?.name || id;
   };
 
-  // Drag & Drop handlers (only for Pending Review column)
+  // Drag & Drop handlers
   const handleDragStart = (e: DragEvent, taskId: Id<"tasks">) => {
     setDraggedTask(taskId);
     e.dataTransfer.effectAllowed = 'move';
@@ -114,41 +107,6 @@ function App() {
 
   const handleDragEnd = () => {
     setDraggedTask(null);
-  };
-
-  const renderTaskCard = (task: Task, draggable: boolean = false) => {
-    const statusClass = task.status === 'in_progress' ? 'working' 
-      : task.status === 'pending_review' ? 'review'
-      : task.status === 'done' ? 'done' : '';
-    
-    return (
-      <div 
-        key={task._id} 
-        className={`task-card ${statusClass} ${draggedTask === task._id ? 'dragging' : ''}`}
-        draggable={draggable}
-        onDragStart={draggable ? (e) => handleDragStart(e, task._id) : undefined}
-        onDragOver={draggable ? handleDragOver : undefined}
-        onDrop={draggable ? (e) => handleDrop(e, task._id) : undefined}
-        onDragEnd={draggable ? handleDragEnd : undefined}
-      >
-        <h4>{task.title}</h4>
-        <p>{task.description}</p>
-        
-        {(task.projectId || task.project) && (
-          <div className="task-project">📁 {task.projectId || task.project}</div>
-        )}
-        
-        {task.assigneeIds && task.assigneeIds.length > 0 && (
-          <div className="task-assignees">
-            👤 {task.assigneeIds.map(id => getAgentName(id)).join(', ')}
-          </div>
-        )}
-        
-        {(task.lastUpdate || task.lastUpdated) && (
-          <div className="task-timestamp">🕐 {formatTimestamp(task.lastUpdate || task.lastUpdated)}</div>
-        )}
-      </div>
-    );
   };
 
   if (!isAuthenticated) {
@@ -187,15 +145,25 @@ function App() {
           <div className="task-columns">
             <div className="task-column">
               <h3>📋 Pending</h3>
-              {filteredTasks.filter(t => t.status === 'pending').map(task => 
-                renderTaskCard(task)
-              )}
+              {filteredTasks.filter(t => t.status === 'pending').map(task => (
+                <TaskCard
+                  key={task._id}
+                  task={task}
+                  getAgentName={getAgentName}
+                  formatTimestamp={formatTimestamp}
+                />
+              ))}
             </div>
             <div className="task-column">
               <h3>⚡ In Progress</h3>
-              {filteredTasks.filter(t => t.status === 'in_progress').map(task => 
-                renderTaskCard(task)
-              )}
+              {filteredTasks.filter(t => t.status === 'in_progress').map(task => (
+                <TaskCard
+                  key={task._id}
+                  task={task}
+                  getAgentName={getAgentName}
+                  formatTimestamp={formatTimestamp}
+                />
+              ))}
             </div>
             <div className="task-column review-column">
               <h3>👀 Pending Review</h3>
@@ -203,14 +171,32 @@ function App() {
               {filteredTasks
                 .filter(t => t.status === 'pending_review')
                 .sort((a, b) => (a.order || a.position || 0) - (b.order || b.position || 0))
-                .map(task => renderTaskCard(task, true))
+                .map(task => (
+                  <TaskCard
+                    key={task._id}
+                    task={task}
+                    draggable={true}
+                    isDragging={draggedTask === task._id}
+                    getAgentName={getAgentName}
+                    formatTimestamp={formatTimestamp}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onDragEnd={handleDragEnd}
+                  />
+                ))
               }
             </div>
             <div className="task-column">
               <h3>✅ Done</h3>
-              {filteredTasks.filter(t => t.status === 'done').map(task => 
-                renderTaskCard(task)
-              )}
+              {filteredTasks.filter(t => t.status === 'done').map(task => (
+                <TaskCard
+                  key={task._id}
+                  task={task}
+                  getAgentName={getAgentName}
+                  formatTimestamp={formatTimestamp}
+                />
+              ))}
             </div>
           </div>
           {filteredTasks.length === 0 && <p className="empty">No hay tareas cargadas. El Squad está en espera.</p>}
