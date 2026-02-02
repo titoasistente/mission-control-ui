@@ -1,7 +1,8 @@
-import { useState, DragEvent } from "react";
+import { useState } from "react";
+import type { DragEvent } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { Id } from "../convex/_generated/dataModel";
+import type { Id } from "../convex/_generated/dataModel";
 
 interface Task {
   _id: Id<"tasks">;
@@ -15,15 +16,6 @@ interface Task {
   position?: number;
   lastUpdated?: number;
   lastUpdate?: number;
-}
-
-interface Comment {
-  _id: Id<"comments">;
-  taskId: string;
-  author: string;
-  text: string;
-  createdAt?: number;
-  timestamp?: number;
 }
 
 interface TaskCardProps {
@@ -55,7 +47,7 @@ export default function TaskCard({
   const taskComments = allComments.filter(c => c.taskId === task._id);
   
   const statusClass = task.status === 'in_progress' ? 'working' 
-    : task.status === 'pending_review' ? 'review'
+    : task.status === 'review' ? 'review'
     : task.status === 'done' ? 'done' : '';
 
   return (

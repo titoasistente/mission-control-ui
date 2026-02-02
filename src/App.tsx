@@ -1,24 +1,11 @@
-import { useState, useEffect, DragEvent } from "react";
+import { useState, useEffect } from "react";
+import type { DragEvent } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { Id } from "../convex/_generated/dataModel";
+import type { Id } from "../convex/_generated/dataModel";
 import Login from "./Login";
 import TaskCard from "./TaskCard";
 import './App.css'
-
-interface Task {
-  _id: Id<"tasks">;
-  title: string;
-  description: string;
-  status: string;
-  assigneeIds: string[];
-  project?: string;
-  projectId?: string;
-  order?: number;
-  position?: number;
-  lastUpdated?: number;
-  lastUpdate?: number;
-}
 
 function formatTimestamp(ts?: number): string {
   if (!ts) return '';
@@ -95,7 +82,7 @@ function App() {
     if (!draggedTask || draggedTask === targetTaskId) return;
     
     const reviewTasks = filteredTasks
-      .filter(t => t.status === 'pending_review')
+      .filter(t => t.status === 'review')
       .sort((a, b) => (a.order || 0) - (b.order || 0));
     
     const targetIndex = reviewTasks.findIndex(t => t._id === targetTaskId);
@@ -169,7 +156,7 @@ function App() {
               <h3>👀 Pending Review</h3>
               <p className="column-hint">Drag to reorder</p>
               {filteredTasks
-                .filter(t => t.status === 'pending_review')
+                .filter(t => t.status === 'review')
                 .sort((a, b) => (a.order || a.position || 0) - (b.order || b.position || 0))
                 .map(task => (
                   <TaskCard
