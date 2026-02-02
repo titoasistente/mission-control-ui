@@ -150,11 +150,11 @@ function App() {
     e.preventDefault();
     if (!draggedTask || draggedTask === targetTaskId) return;
     
-    const reviewTasks = filteredTasks
-      .filter(t => t.status === 'review')
+    const pendingTasksSorted = filteredTasks
+      .filter(t => t.status === 'pending')
       .sort((a, b) => (a.order || a.position || 0) - (b.order || b.position || 0));
     
-    const targetIndex = reviewTasks.findIndex(t => t._id === targetTaskId);
+    const targetIndex = pendingTasksSorted.findIndex(t => t._id === targetTaskId);
     const newOrder = targetIndex * 10;
     
     try {
@@ -235,14 +235,21 @@ function App() {
         <section className="tasks-section">
           <h2>🗂️ Task Board</h2>
           <div className="task-columns">
-            <div className="task-column">
+            <div className="task-column pending-column">
               <h3>📋 Pending</h3>
-              {pendingTasks.map(task => (
+              <p className="column-hint">Drag to prioritize</p>
+              {pendingTasks.sort((a, b) => (a.order || a.position || 0) - (b.order || b.position || 0)).map(task => (
                 <TaskCard
                   key={String(task._id)}
                   task={task}
+                  draggable={true}
+                  isDragging={draggedTask === task._id}
                   getAgentName={getAgentName}
                   formatTimestamp={formatTimestamp}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
                   onClick={handleTaskClick}
                 />
               ))}
@@ -261,19 +268,12 @@ function App() {
             </div>
             <div className="task-column review-column">
               <h3>👀 Pending Review</h3>
-              <p className="column-hint">Drag to reorder</p>
               {reviewTasks.map(task => (
                 <TaskCard
                   key={String(task._id)}
                   task={task}
-                  draggable={true}
-                  isDragging={draggedTask === task._id}
                   getAgentName={getAgentName}
                   formatTimestamp={formatTimestamp}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
                   onClick={handleTaskClick}
                   onApprove={handleApproveTask}
                   canApprove={true}

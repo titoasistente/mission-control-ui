@@ -260,6 +260,41 @@ header h1 {
   color: #555;
 }
 
+ .pending-column {
+  background: rgba(249, 115, 22, 0.08);
+  padding: 15px;
+  border-radius: var(--radius-lg);
+  margin: -10px;
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  position: relative;
+}
+
+.pending-column::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-orange), var(--accent-orange-light));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* Empty state for pending column */
+.pending-column:empty::before,
+.pending-column .empty-pending {
+  content: 'Drag tasks here to prioritize';
+  display: block;
+  text-align: center;
+  padding: 30px 15px;
+  color: var(--text-dim);
+  font-style: italic;
+  font-size: 0.8rem;
+  border: 2px dashed rgba(249, 115, 22, 0.2);
+  border-radius: var(--radius-md);
+  margin-top: 10px;
+}
+
 .review-column {
   background: rgba(168, 85, 247, 0.08);
   padding: 15px;
@@ -283,7 +318,7 @@ header h1 {
 /* Empty state for review column */
 .review-column:empty::before,
 .review-column .empty-review {
-  content: 'Drag tasks here for review';
+  content: 'Tasks awaiting approval';
   display: block;
   text-align: center;
   padding: 30px 15px;
