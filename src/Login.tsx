@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export default function Login({ onLogin }: { onLogin: (pass: string) => void }) {
   const [pass, setPass] = useState('');
